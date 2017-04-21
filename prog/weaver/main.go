@@ -311,11 +311,16 @@ func main() {
 		dockerVersion = dockerCli.DockerVersion()
 	}
 
-	network := ""
-	if isAWSVPC {
-		network = "awsvpc"
-	}
-	checkForUpdates(dockerVersion, network)
+	checkForUpdates(dockerVersion, func() map[string]string {
+		var flags map[string]string
+		status := weave.NewNetworkRouterStatus(router)
+		for _, conn := range status.Connections {
+			if connectionName, ok := conn.Attrs["name"].(string); ok {
+				flags[connectionName] = "network"
+			}
+		}
+		return flags
+	})
 
 	observeContainers := func(o docker.ContainerObserver) {
 		if dockerCli != nil {
