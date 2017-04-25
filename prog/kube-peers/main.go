@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 
 	"k8s.io/client-go/kubernetes"
 	api "k8s.io/client-go/pkg/api/v1"
@@ -37,7 +38,10 @@ func getKubePeers() ([]string, error) {
 	for _, peer := range nodeList.Items {
 		for _, addr := range peer.Status.Addresses {
 			if addr.Type == "InternalIP" {
-				addresses = append(addresses, addr.Address)
+				addrtest := net.ParseIP(addr.Address)
+				if addrtest.To4() != nil {
+					addresses = append(addresses, addr.Address)
+				}
 			}
 		}
 	}
